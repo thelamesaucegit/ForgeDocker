@@ -9,6 +9,9 @@ COPY tsconfig.json .
 COPY server.ts .
 COPY parser.ts .
 
+# --- ADD THIS DEBUGGING STEP ---
+RUN ls -la
+
 RUN npm run build
 
 # ----------------- Stage 2: Create the final runtime image -----------------
