@@ -3,7 +3,12 @@ FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-COPY . .
+
+# Explicitly copy only the necessary source and config files
+COPY tsconfig.json .
+COPY server.ts .
+COPY parser.ts .
+
 RUN npm run build
 
 # ----------------- Stage 2: Create the final runtime image -----------------
@@ -18,7 +23,7 @@ RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 
 # Copy the Forge assets
-COPY forgeSim.jar ./
+COPY forge.jar ./
 COPY res/ ./res/
 
 EXPOSE 8080
