@@ -141,9 +141,8 @@ export function parseLogLine(line: string, currentState: GameState): GameState |
 function removeCardFromBattlefield(state: GameState, cardId: string) {
   for (const playerName in state.players) {
     state.players[playerName].battlefield = state.players[playerName].battlefield.filter(
-      card => card.id !== cardId
+      // THE FIX IS HERE: We explicitly tell TypeScript that 'card' is of type 'Card'.
+      (card: Card) => card.id !== cardId
     );
   }
 }
-
-
