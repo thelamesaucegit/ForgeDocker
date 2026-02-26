@@ -26,7 +26,7 @@ RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 
 # Copy the Forge assets
-COPY forge.jar ./
+COPY forgeSim.jar ./
 COPY res/ ./res/
 
 EXPOSE 8080
