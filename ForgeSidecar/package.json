@@ -3,22 +3,21 @@
   "version": "1.0.0",
   "description": "WebSocket server to manage and parse Forge simulations.",
   "type": "module",
-  "main": "server.ts",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node --import ts-node/esm server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "chokidar": "^3.6.0",
-    "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
     "ws": "^8.17.0"
   },
   "devDependencies": {
+    "ts-node": "^10.9.2",
     "@types/ws": "^8.5.10"
   }
 }
-
-
