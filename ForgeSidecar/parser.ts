@@ -1,5 +1,3 @@
-// src/sidecar/parser.ts
-
 // --- Interfaces ---
 export interface Card {
   id: string;
@@ -41,9 +39,8 @@ const regexCombatDamage = /Damage: (?<cardName>.+) \((?<cardId>\d+)\) deals \d+ 
 
 // --- Main Parser Function ---
 export function parseLogLine(line: string, currentState: GameState): GameState | null {
-  const state = JSON.parse(JSON.stringify(currentState)); // Deep copy to avoid mutation issues
+  const state = JSON.parse(JSON.stringify(currentState));
 
-  // Player Setup (only runs once)
   if (Object.keys(state.players).length === 0 && line.includes("vs")) {
     const matches = [...line.matchAll(regexPlayerSetup)];
     if (matches.length >= 2) {
@@ -58,7 +55,6 @@ export function parseLogLine(line: string, currentState: GameState): GameState |
 
   let match: RegExpMatchArray | null;
 
-  // Turn Change
   match = line.match(regexTurn);
   if (match?.groups) {
     state.turn = parseInt(match.groups.turnNum, 10);
@@ -66,7 +62,6 @@ export function parseLogLine(line: string, currentState: GameState): GameState |
     return state;
   }
 
-  // Land Played
   match = line.match(regexLand);
   if (match?.groups) {
     const { player, cardName, cardId } = match.groups;
@@ -76,17 +71,15 @@ export function parseLogLine(line: string, currentState: GameState): GameState |
     return state;
   }
 
-  // Spell Cast
   match = line.match(regexCast);
   if (match?.groups) {
-      const { player, cardName, cardId } = match.groups;
-      if (state.players[player]) {
-          state.players[player].battlefield.push({ id: cardId, name: cardName });
-      }
-      return state;
+    const { player, cardName, cardId } = match.groups;
+    if (state.players[player]) {
+      state.players[player].battlefield.push({ id: cardId, name: cardName });
+    }
+    return state;
   }
 
-  // Player Damage
   match = line.match(regexDamage);
   if (match?.groups) {
     const { damage, targetPlayer } = match.groups;
@@ -96,7 +89,6 @@ export function parseLogLine(line: string, currentState: GameState): GameState |
     return state;
   }
 
-  // Life Gain
   match = line.match(regexLifeGain);
   if (match?.groups) {
     const { player, amount } = match.groups;
@@ -106,42 +98,39 @@ export function parseLogLine(line: string, currentState: GameState): GameState |
     return state;
   }
 
-  // Explicit Destruction
   match = line.match(regexDestroy);
   if (match?.groups) {
-      removeCardFromBattlefield(state, match.groups.cardId);
-      return state;
+    removeCardFromBattlefield(state, match.groups.cardId);
+    return state;
   }
 
-  // Implicit Zone Change (Died in combat, etc.)
   match = line.match(regexZoneChange);
   if (match?.groups) {
-      removeCardFromBattlefield(state, match.groups.cardId);
-      return state;
+    removeCardFromBattlefield(state, match.groups.cardId);
+    return state;
   }
 
-  // Discover Token via Combat
   match = line.match(regexCombatDamage);
   if (match?.groups) {
-      const { cardName, cardId, targetPlayer } = match.groups;
-      const controller = Object.keys(state.players).find(p => p !== targetPlayer);
-      if (controller && state.players[controller]) {
-          const exists = state.players[controller].battlefield.some(c => c.id === cardId);
-          if (!exists) {
-              state.players[controller].battlefield.push({ id: cardId, name: cardName });
-          }
+    const { cardName, cardId, targetPlayer } = match.groups;
+    const controller = Object.keys(state.players).find(p => p !== targetPlayer);
+    if (controller && state.players[controller]) {
+      // THE FIX IS HERE: We explicitly tell TypeScript that 'c' is of type 'Card'.
+      const exists = state.players[controller].battlefield.some((c: Card) => c.id === cardId);
+      if (!exists) {
+        state.players[controller].battlefield.push({ id: cardId, name: cardName });
       }
-      return state;
+    }
+    return state;
   }
 
-  return null; // Return null if no regex matched, indicating no state change
+  return null;
 }
 
 // --- Helper Function ---
 function removeCardFromBattlefield(state: GameState, cardId: string) {
   for (const playerName in state.players) {
     state.players[playerName].battlefield = state.players[playerName].battlefield.filter(
-      // THE FIX IS HERE: We explicitly tell TypeScript that 'card' is of type 'Card'.
       (card: Card) => card.id !== cardId
     );
   }
